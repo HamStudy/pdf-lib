@@ -23,6 +23,10 @@ import {
   skewRadians,
   stroke,
   translate,
+  LineCapStyle,
+  setLineCap,
+  LineJoinStyle,
+  setLineJoin,
 } from 'src/api/operators';
 import { Rotation, toRadians } from 'src/api/rotations';
 import { svgPathToOperators } from 'src/api/svgPath';
@@ -129,6 +133,59 @@ export const drawPage = (
   popGraphicsState(),
 ];
 
+export const drawLinePath = (options: {
+    thickness: number | PDFNumber | undefined;
+    lineCap?: LineCapStyle | undefined;
+    lineJoin?: LineJoinStyle | undefined;
+    strokeColor?: Color | undefined;
+    fillColor?: Color | undefined;
+    points: [number | PDFNumber, number | PDFNumber][];
+    close?: boolean | undefined;
+  }) => [
+    pushGraphicsState(),
+    setLineWidth(options.thickness || 1) ,
+    setLineCap(options.lineCap !== void 0 ? options.lineCap : LineCapStyle.Round),
+    setLineJoin(options.lineJoin !== void 0 ? options.lineJoin : LineJoinStyle.Round),
+    moveTo(...options.points[0]),
+    ...(options.points.slice(1).map(p => lineTo(...p) )),
+    options.strokeColor && setStrokingColor(options.strokeColor),
+    options.fillColor && setFillingColor(options.fillColor),
+    (options.strokeColor && options.fillColor) ? 
+        fillAndStroke() :   // If both, do both
+        options.strokeColor ? stroke() : // if only stroke, do stroke
+        options.fillColor ? fill() : void 0, // if only fill, fill, else nothing
+    popGraphicsState(),
+  ].filter(Boolean) as PDFOperator[];
+
+export const drawCheck = (options: {
+  x: number | PDFNumber; y: number | PDFNumber;
+  width: number | PDFNumber; height: number | PDFNumber;
+  thickness: number | PDFNumber | undefined;
+  lineCap?: LineCapStyle | undefined;
+  lineJoin?: LineJoinStyle | undefined;
+  color: Color | undefined;
+}) => {
+    const [x, y, width, height] = [
+        asNumber(options.x),
+        asNumber(options.y),
+        asNumber(options.width),
+        asNumber(options.height),
+    ];
+    const points = [
+        [Math.trunc(x + width * 0.2), Math.trunc(y - height * 0.7)],
+        [Math.trunc(x + width * 0.5), Math.trunc(y - height * 1.0)],
+        [Math.trunc(x + width * 1.0), Math.trunc(y - height * 0.2)],
+    ] as [number, number][];
+    delete options.x;
+    delete options.y;
+    delete options.width;
+    delete options.height;
+    const leanOpts = options as Omit<typeof options, 'x'|'y'|'width'|'height'>;
+    return drawLinePath({
+      ...leanOpts,
+      points,
+    });
+};
 export const drawLine = (options: {
   start: { x: number | PDFNumber; y: number | PDFNumber };
   end: { x: number | PDFNumber; y: number | PDFNumber };

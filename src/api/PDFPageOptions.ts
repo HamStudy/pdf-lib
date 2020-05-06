@@ -1,6 +1,7 @@
 import { Color } from 'src/api/colors';
 import PDFFont from 'src/api/PDFFont';
 import { Rotation } from 'src/api/rotations';
+import { LineCapStyle, LineJoinStyle } from 'src/api/operators';
 
 export interface PDFPageDrawTextOptions {
   color?: Color;
@@ -49,6 +50,29 @@ export interface PDFPageDrawRectangleOptions {
   borderWidth?: number;
   color?: Color;
   borderColor?: Color;
+}
+
+export interface PDFPageDrawLinePathOptions {
+    /** Defaults to 1 */
+    thickness?: number;
+    /** Defaults to "Round" */
+    lineCap?: LineCapStyle;
+    /** Defaults to "Round" */
+    lineJoin?: LineJoinStyle;
+    /** If set then the path will be `stroke()`ed */
+    strokeColor?: Color;
+    /** If set then the path will be `fill()`ed */
+    fillColor?: Color;
+    /**
+     * [x, y] for each point; a line will be
+     * drawn between each point starting with
+     * the first.
+     * 
+     * To close the path at the end pass set close: true
+     */
+    points: [number, number][];
+    /** If true the path will be closed */
+    close?: boolean;
 }
 
 export interface PDFPageDrawLineOptions {
